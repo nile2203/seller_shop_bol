@@ -42,8 +42,8 @@ class BolooAccessor:
 
     def get_access_token(
             self,
-            client_id='69bd83f1-1172-4b02-821a-b5a2af5a32da',
-            client_secret='NfainCcmbafiCUiutV7IKmjn8NbOCbw6Xc16a-_MDVyC0jhfbekNIpQ3z3sNUHhNJJEhK3ORSbh8WWbf9zSGpQ'):
+            client_id,
+            client_secret):
         data = {
             'client_id': client_id,
             'client_secret': client_secret,
