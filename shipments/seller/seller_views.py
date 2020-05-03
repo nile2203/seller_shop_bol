@@ -5,7 +5,7 @@ from shipments.seller.seller import BolooSellerDetails
 
 
 @api_view(['POST'])
-def api_get_access_token(request):
+def api_create_access_token(request):
     result_builder = ResultBuilder()
     post_data = request.data
 
@@ -20,7 +20,7 @@ def api_get_access_token(request):
         return result_builder.ok_200().fail().message(message).get_response()
 
     boloo_seller = BolooSellerDetails(seller=seller_details)
-    status, message, auth_token = boloo_seller.get_access_token()
+    status, message, auth_token = boloo_seller.create_access_token()
     if status == 0:
         return result_builder.ok_200().fail().message(message).get_response()
 

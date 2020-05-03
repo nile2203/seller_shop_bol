@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+from celery.schedules import crontab
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -40,7 +42,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'shipments',
-    'django_extensions'
+    'django_extensions',
+    'rest_framework.authtoken',
+    'django_celery_beat'
 ]
 
 MIDDLEWARE = [
@@ -52,6 +56,19 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication'
+    ]
+}
+
+CELERY_BEAT_SCHEDULE = {
+    'get_all_shipments': {
+        'task': 'shipments.shipment.tasks.get_all_shipments',
+        'schedule': crontab(minute=1)
+    }
+}
 
 ROOT_URLCONF = 'seller_shop.urls'
 
