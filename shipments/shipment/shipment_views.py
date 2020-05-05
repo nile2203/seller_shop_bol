@@ -4,7 +4,7 @@ from shipments.helpers.decorators import validate_user
 from shipments.helpers.paginator import BolooPaginator
 from shipments.helpers.result_builder import ResultBuilder
 from shipments.shipment.shipment import BolooShipmentDetails
-from shipments.shipment.tasks import get_all_shipments
+from shipments.shipment.tasks import get_all_shipments_for_seller
 
 
 @api_view(['GET'])
@@ -31,6 +31,6 @@ def api_get_all_shipments(request):
 @validate_user
 def api_initiate_shipment_sync(request):
     result_builder = ResultBuilder()
-    get_all_shipments.delay(request.user.id)
+    get_all_shipments_for_seller.delay(request.user.id)
     return result_builder.success().message('Sync has started. Shipments will be available soon').get_response()
 

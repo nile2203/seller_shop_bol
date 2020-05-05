@@ -34,3 +34,6 @@ class BolooSellerDetails:
         self.seller.save()
         return 1, 'Authorization token fetched', token.key
 
+    @staticmethod
+    def get_all_seller_details():
+        return SellerDetails.objects.filter().order_by('-created')

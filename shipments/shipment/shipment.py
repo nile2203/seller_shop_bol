@@ -1,8 +1,8 @@
 import json
-import time
 
 from django.db import IntegrityError
 from django.db import transaction as db_transaction
+from django.db.models import Q
 
 from rest_framework import serializers
 from rest_framework.renderers import JSONRenderer
@@ -16,10 +16,11 @@ from shipments.user.user import BolooShipmentCustomerDetails
 
 
 class BolooShipmentDetails:
-    def __init__(self, shipment_id=None, shipment=None, seller=None):
+    def __init__(self, shipment_id=None, shipment=None, seller=None, seller_id=None):
         self.shipment_id = shipment_id
         self.shipment = shipment
         self.seller = seller
+        self.seller_id = seller_id
 
     def get_shipment_by_shipment_id(self):
         return ShipmentDetails.objects.filter(shipment_id=self.shipment_id).select_related('seller', 'user').first()
@@ -56,7 +57,7 @@ class BolooShipmentDetails:
 
     def get_pending_shipments_by_seller(self):
         return ShipmentDetails.objects.filter(status=ShipmentDetails.STATUS_TYPE_PENDING,
-                                              seller=self.seller).select_related('user', 'seller')[:5]
+                                              seller__id=self.seller_id).select_related('user', 'seller')[:5]
 
     def create_shipment_details(self, content):
         shipments = content.get('shipments')
@@ -76,41 +77,36 @@ class BolooShipmentDetails:
                 shipment_date=shipment['shipmentDate'], transport_id=shipment.get('transport').get('transportId'),
                 seller=self.seller))
 
-        try:
-            ShipmentDetails.objects.bulk_create(shipment_object_list)
-        except IntegrityError:
-            pass
+        ShipmentDetails.objects.bulk_create(shipment_object_list, ignore_conflicts=True)
 
     def get_all_shipments_from_bol_by_fulfilment_method(self, fulfilment_method):
         boloo_accessor = BolooAccessor(access_token=self.seller.access_token)
         boloo_seller = BolooSellerDetails(seller=self.seller)
-        retry, page_number = 1, 1
+        page_number = 1
         while True:
             status, message, content = boloo_accessor.get_all_shipments(
                 page_number=page_number, fulfilment_method=fulfilment_method)
             print(content, status, message)
+
+            # Access token needs to be refreshed
             if status == -1:
                 boloo_seller.create_access_token()
                 boloo_seller.seller.refresh_from_db()
                 boloo_accessor.access_token = boloo_seller.seller.access_token
                 continue
 
-            if status == -2:
-                time.sleep(60)
-                if retry == 3:
-                    break
+            # In case of invalid inputs, server failure and invalid requests
+            if status in [0, -2, -4, -5]:
+                return status, message, content
 
-                retry += 1
-                continue
-
-            if status == 0:
-                continue
-
-            if not content:
-                break
+            # All the shipments for the seller are fetched
+            if status == 1 and not content:
+                return 1, 'All shipments fetched', None
 
             self.create_shipment_details(content)
             page_number += 1
+
+        return 1, 'Shipment fetched', None
 
     def update_shipment_details(self, content):
         '''

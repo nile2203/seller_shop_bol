@@ -63,10 +63,13 @@ REST_FRAMEWORK = {
     ]
 }
 
+USE_TZ = True
+TIME_ZONE = 'Asia/Kolkata'
+CELERY_ALWAYS_EAGER = True
 CELERY_BEAT_SCHEDULE = {
     'get_all_shipments': {
         'task': 'shipments.shipment.tasks.get_all_shipments',
-        'schedule': crontab(minute=1)
+        'schedule': crontab(minute=5)
     }
 }
 

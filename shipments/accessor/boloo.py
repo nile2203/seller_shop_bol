@@ -40,18 +40,20 @@ class BolooAccessor:
             return 0, 'Invalid method', None
 
         print(response.headers, response.content, response.status_code)
+
         status_code = response.status_code
+        content = json.loads(response.content.decode('utf-8'))
         if status_code == 200:
-            return 1, 'Request successful', json.loads(response.content.decode('utf-8'))
+            return 1, 'Request successful', content
 
         if status_code == 500:
-            return 0, 'Unable to reach bol server right now. Try again', None
+            return -5, 'Unable to reach bol server right now. Try again', None
 
         if status_code == 400:
-            return 0, json.loads(response.content.decode('utf-8')), None
+            return -4, content, None
 
         if status_code == 401:
-            return -1, json.loads(response.content.decode('utf-8')), None
+            return -1, content, None
 
         if status_code == 429:
             return -2, 'Too many requests', None

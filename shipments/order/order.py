@@ -47,10 +47,7 @@ class BolooShipmentOrderDetails:
                 price=order_detail['offerPrice'], order_condition=order_detail.get('offerCondition'),
                 fulfilment_method=order_detail['fulfilmentMethod'], shipment=self.shipment))
 
-        try:
-            OrderItem.objects.bulk_create(order_object_list)
-        except IntegrityError:
-            pass
+        OrderItem.objects.bulk_create(order_object_list, ignore_conflicts=True)
 
 
 class BolooShipmentOrderDetailsSerializer(serializers.ModelSerializer):
